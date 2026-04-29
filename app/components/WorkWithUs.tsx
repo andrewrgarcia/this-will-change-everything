@@ -15,7 +15,7 @@ export default function GitHubCTA() {
         </h3>
 
         <a
-          href="https://github.com/your-org/this-will-change-everything"
+          href="https://github.com/andrewrgarcia/this-will-change-everything"
           target="_blank"
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}

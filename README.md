@@ -1,6 +1,8 @@
 # this-will-change-everything
 
-> A [WorkDog](https://getworkdog.com) project: This codebase almost does something. Finish the thought. — [view the listing → ](https://getworkdog.com/projects/cmojl96sk000126u9kdo4ki92)
+A [WorkDog](https://getworkdog.com) project: This codebase almost does something. Finish the thought. — [view the listing → ](https://getworkdog.com/projects/cmojl96sk000126u9kdo4ki92)
+
+Preview the system (for the curious): [open the interface →](https://this-will-change-everything.vercel.app/)
 
 ---
 
