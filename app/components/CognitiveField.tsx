@@ -40,7 +40,8 @@ export default function CognitiveField() {
           const dist = Math.sqrt(dx * dx + dy * dy)
 
           if (dist < 120) {
-            ctx.strokeStyle = `rgba(255,255,255,${0.08 * (1 - dist / 120)})`
+            ctx.strokeStyle = `rgba(255,255,255,${0.32 * (1 - dist / 120)})`
+            ctx.lineWidth = 2
             ctx.beginPath()
             ctx.moveTo(nodes[i].x, nodes[i].y)
             ctx.lineTo(nodes[j].x, nodes[j].y)
@@ -52,7 +53,7 @@ export default function CognitiveField() {
       // draw nodes
       nodes.forEach((node) => {
         ctx.beginPath()
-        ctx.arc(node.x, node.y, 2, 0, Math.PI * 2)
+        ctx.arc(node.x, node.y, 4, 0, Math.PI * 2)
         ctx.fillStyle = 'rgba(255,255,255,0.8)'
         ctx.fill()
 
@@ -85,7 +86,7 @@ export default function CognitiveField() {
       <canvas ref={canvasRef} className="w-full h-full" />
 
       {/* Overlay text (this is where you lie to users) */}
-      <div className="absolute bottom-4 left-4 text-xs text-muted-foreground font-mono">
+      <div className="absolute bottom-4 left-4 text-sm text-muted-foreground font-mono">
         SIGNAL FIELD ACTIVE • NODES: VARIABLE • STATE: CONVERGING
       </div>
     </div>
