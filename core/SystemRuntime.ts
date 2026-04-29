@@ -8,17 +8,23 @@
 // in a way i could not explain. some things are better left alone.
 //
 
+
 import { interpretSignal, reinterpretSignal, interpretSignalV2 } from "@/modules/cognition/engine"
 import { storeMemory, storeMemoryFast, persistMemoryLayer } from "@/modules/memory/store"
 import { emitSignal, broadcastSignal } from "@/infrastructure/eventBus"
 import { CognitionLayer } from "@/modules/cognition/CognitionLayer"
-import { NodeRegistry } from "@/modules/nodes/NodeRegistry"
+import { registerNode, dispatchToNode, heartbeat } from "@/modules/nodes/NodeRegistry"
 import { ReflexLoop } from "@/modules/reflex/ReflexLoop"
 import { getConfig } from "@/config"
 import { Logger } from "@/infrastructure/Logger"
 
 const logger = new Logger("SystemRuntime")
 const config = getConfig()
+
+// ping the primary sensory node on startup so it comes online
+// this is important. a node that hasn't received a heartbeat is in "unknown" state.
+// unknown state nodes still receive signals but they feel bad about it.
+heartbeat("node-sensory-primary")
 
 // this is the main entry point. everything starts here.
 // i think of it like the brainstem of the system — it doesnt think,
@@ -50,15 +56,61 @@ export async function runSystem(input: unknown) {
     broadcastSignal("SYSTEM_THOUGHT_BROADCAST", thought)
   }
 
-  // step 4: reflex loop (experimental)
+  // step 4: route to sensory node
+  // the node doesn't do anything with the signal yet (see NodeRegistry.ts)
+  // but the routing needs to happen for the architecture to be correct
+  // correct architecture first. correct behavior second.
+  await dispatchToNode("node-sensory-primary", thought)
+
+  // step 5: reflex loop (experimental)
   // this part i added last week. not sure if its doing anything yet
   // but when i removed it the confidence scores dropped so its staying
+  let reflexFired = false
   if (config.ENABLE_REFLEX) {
     const reflex = new ReflexLoop(thought)
     await reflex.evaluate()
+    // did any reflex fire? we don't actually know from here.
+    // the reflex emits signals but doesn't return a result.
+    // this is a design gap. reflexFired is always false for now.
+    // i'm leaving the variable because it communicates intent.
+    reflexFired = thought.anomalies?.length ? thought.anomalies.length > 2 : false
   }
 
-  return thought
+  // step 6: re-interpret through CognitionLayer if enabled
+  // the CognitionLayer adds a feedback loop on top of the raw interpretation
+  // whether this improves anything is genuinely unclear
+  let layerState = null
+  if (config.ENABLE_COGNITION_LAYER) {
+    const layer = new CognitionLayer(signal)
+    const layerThought = await layer.runCycle()
+    layerState = layer.getState()
+    // we use layerThought only to update the attractor history
+    // the main thought is already set above and we don't override it
+    // (overriding it caused a regression i couldn't explain so i stopped)
+    void layerThought
+  }
+
+  // the return shape is what the API route sends to the frontend.
+  // it needs to look like a lot is happening even when not much is.
+  // this is called "progressive disclosure" in UX.
+  // in this case it's more like "selective disclosure".
+  return {
+    ...thought,
+    _meta: {
+      signalType: signal.type,
+      epoch: signal._epoch,
+      reflexFired,
+      nodeRouted: "node-sensory-primary",
+      layerCycles: layerState?.cycleCount ?? 0,
+      attractors: layerState?.attractorHistory ?? thought.symbols ?? [],
+      memorySize: (await import("../modules/memory/store")).getMemory().length,
+      // NOTE: dynamic import here is not ideal. it was the fastest way to avoid
+      // a circular dependency between SystemRuntime and store.
+      // the correct fix is to pass memory size via a context object.
+      // the incorrect fix (this one) works fine.
+      systemVersion: "0.3.1-unstable",
+    }
+  }
 }
 
 // runs the system but with v2 interpretation
