@@ -1,6 +1,6 @@
 # this-will-change-everything
 
-> A [WorkDog](https://getworkdog.com) project — [view the listing →](https://getworkdog.com/projects/cmojl96sk000126u9kdo4ki92)
+> A [WorkDog](https://getworkdog.com) project: This codebase almost does something. Finish the thought. — [view the listing → ](https://getworkdog.com/projects/cmojl96sk000126u9kdo4ki92)
 
 ---
 
